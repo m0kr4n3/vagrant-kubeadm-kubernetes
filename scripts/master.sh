@@ -34,11 +34,15 @@ chmod +x $config_path/join.sh
 
 kubeadm token create --print-join-command > $config_path/join.sh
 
-# Install Calico Network Plugin
 
-curl https://raw.githubusercontent.com/projectcalico/calico/v${CALICO_VERSION}/manifests/calico.yaml -O
+# Install helm
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod +x get_helm.sh
+sudo get_helm.sh
 
-kubectl apply -f calico.yaml
+# Install Cilium CNI plugin
+helm repo add cilium https://helm.cilium.io/
+helm install cilium cilium/cilium --version 1.15.4   --namespace kube-system --set hubble.relay.enabled=true --set hubble.ui.enabled=true
 
 sudo -i -u vagrant bash << EOF
 whoami

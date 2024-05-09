@@ -3,20 +3,17 @@ require "yaml"
 vagrant_root = File.dirname(File.expand_path(__FILE__))
 settings = YAML.load_file "#{vagrant_root}/settings.yaml"
 
-IP_SECTIONS = settings["network"]["control_ip"].match(/^([0-9.]+\.)([^.]+)$/)
-# First 3 octets including the trailing dot:
-IP_NW = IP_SECTIONS.captures[0]
-# Last octet excluding all dots:
-IP_START = Integer(IP_SECTIONS.captures[1])
+
 NUM_WORKER_NODES = settings["nodes"]["workers"]["count"]
+CONTROL_IP = settings["network"]["control_ip"]
+NODE01_IP = settings["network"]["node01_ip"]
+
 
 Vagrant.configure("2") do |config|
-  config.vm.provision "shell", env: { "IP_NW" => IP_NW, "IP_START" => IP_START, "NUM_WORKER_NODES" => NUM_WORKER_NODES }, inline: <<-SHELL
+  config.vm.provision "shell", env:  { "CONTROL_IP" => CONTROL_IP, "NODE01_IP" => NODE01_IP }, inline: <<-SHELL
       apt-get update -y
-      echo "$IP_NW$((IP_START)) controlplane" >> /etc/hosts
-      for i in `seq 1 ${NUM_WORKER_NODES}`; do
-        echo "$IP_NW$((IP_START+i)) node0${i}" >> /etc/hosts
-      done
+      echo "$CONTROL_IP controlplane" >> /etc/hosts
+      echo "$NODE01_IP node01" >> /etc/hosts
   SHELL
 
   if `uname -m`.strip == "aarch64"
@@ -28,7 +25,8 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "controlplane" do |controlplane|
     controlplane.vm.hostname = "controlplane"
-    controlplane.vm.network "private_network", ip: settings["network"]["control_ip"]
+    controlplane.vm.network "public_network", type: "bridged", bridge: "wlan0", ip: CONTROL_IP
+  
     if settings["shared_folders"]
       settings["shared_folders"].each do |shared_folder|
         controlplane.vm.synced_folder shared_folder["host_path"], shared_folder["vm_path"]
@@ -61,10 +59,9 @@ Vagrant.configure("2") do |config|
   end
 
   (1..NUM_WORKER_NODES).each do |i|
-
-    config.vm.define "node0#{i}" do |node|
-      node.vm.hostname = "node0#{i}"
-      node.vm.network "private_network", ip: IP_NW + "#{IP_START + i}"
+    config.vm.define "node01" do |node|
+      node.vm.hostname = "node01"
+      node.vm.network "public_network", type: "bridged", bridge: "wlan0", ip: NODE01_IP
       if settings["shared_folders"]
         settings["shared_folders"].each do |shared_folder|
           node.vm.synced_folder shared_folder["host_path"], shared_folder["vm_path"]
