@@ -38,11 +38,19 @@ kubeadm token create --print-join-command > $config_path/join.sh
 # Install helm
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 chmod +x get_helm.sh
-sudo get_helm.sh
+sudo ./get_helm.sh
 
 # Install Cilium CNI plugin
 helm repo add cilium https://helm.cilium.io/
 helm install cilium cilium/cilium --version 1.15.4   --namespace kube-system --set hubble.relay.enabled=true --set hubble.ui.enabled=true
+
+sudo apt install -y docker.io
+
+docker run -d --restart=always --name registry -v ~/.registry/storage:/var/lib/registry -v /vagrant/certs:/certs  -e REGISTRY_HTTP_ADDR=0.0.0.0:443 -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/registry.local.crt -e REGISTRY_HTTP_TLS_KEY=/certs/registry.local.key -p 443:443 registry:2
+
+sudo cp /vagrant/certs/registry.local.crt /usr/local/share/ca-certificates/registry.local.crt
+
+sudo update-ca-certificates
 
 sudo -i -u vagrant bash << EOF
 whoami

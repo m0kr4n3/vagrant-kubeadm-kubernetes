@@ -10,8 +10,8 @@ cluster_name: Kubernetes Cluster
 # All IPs/CIDRs should be private and allowed in /etc/vbox/networks.conf.
 network:
   # Worker IPs are simply incremented from the control IP.
-  control_ip: 192.168.1.199
-  node01_ip: 192.168.1.198
+  control_ip: 10.0.9.199
+  node01_ip: 10.0.9.198
   dns_servers:
     - 8.8.8.8
   pod_cidr: 172.16.1.0/16

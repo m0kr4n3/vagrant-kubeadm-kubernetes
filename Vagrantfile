@@ -12,7 +12,7 @@ NODE01_IP = settings["network"]["node01_ip"]
 Vagrant.configure("2") do |config|
   config.vm.provision "shell", env:  { "CONTROL_IP" => CONTROL_IP, "NODE01_IP" => NODE01_IP }, inline: <<-SHELL
       apt-get update -y
-      echo "$CONTROL_IP controlplane" >> /etc/hosts
+      echo "$CONTROL_IP controlplane registry.local" >> /etc/hosts
       echo "$NODE01_IP node01" >> /etc/hosts
   SHELL
 

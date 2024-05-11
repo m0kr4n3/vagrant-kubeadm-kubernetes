@@ -16,3 +16,8 @@ sudo chown 1000:1000 /home/vagrant/.kube/config
 NODENAME=$(hostname -s)
 kubectl label node $(hostname -s) node-role.kubernetes.io/worker=worker
 EOF
+
+
+sudo cp /vagrant/certs/registry.local.crt /usr/local/share/ca-certificates/registry.local.crt
+
+sudo update-ca-certificates
